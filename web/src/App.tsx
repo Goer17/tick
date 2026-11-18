@@ -87,7 +87,7 @@ function App(): React.JSX.Element {
   const [token, setTokenState] = useState<string | null>(() => getToken());
   const [authState, setAuthState] = useState<"loading" | "in" | "out">(token ? "loading" : "out");
   const [state, setState] = useState<StatePayload | null>(null);
-  const [view, setView] = useState<View>({ kind: "bucket", bucket: "planned" });
+  const [view, setView] = useState<View>({ kind: "bucket", bucket: "today" });
   const [search, setSearch] = useState("");
   const [mobileMenu, setMobileMenu] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -170,7 +170,7 @@ function App(): React.JSX.Element {
 
   useEffect(() => {
     if (view.kind === "category" && state && !state.categories.some((category) => category.id === view.id)) {
-      setView({ kind: "bucket", bucket: "planned" });
+      setView({ kind: "bucket", bucket: "today" });
     }
   }, [state, view]);
 
@@ -254,7 +254,7 @@ function App(): React.JSX.Element {
 
   const selectedCategory = view.kind === "category" ? categoryMap.get(view.id) : undefined;
   const viewTitle = selectedCategory?.name ?? (view.kind === "bucket" ? BUCKET_META[view.bucket].label : "Tasks");
-  const viewHint = selectedCategory ? "List" : BUCKET_META[view.kind === "bucket" ? view.bucket : "planned"].hint;
+  const viewHint = selectedCategory ? "List" : BUCKET_META[view.kind === "bucket" ? view.bucket : "today"].hint;
   const showCategory = view.kind === "bucket";
 
   function selectView(next: View): void {
@@ -369,7 +369,7 @@ function App(): React.JSX.Element {
       const response = await api.deleteCategory(id);
       applyResponse(response);
       playSound("delete");
-      if (view.kind === "category" && view.id === id) setView({ kind: "bucket", bucket: "planned" });
+      if (view.kind === "category" && view.id === id) setView({ kind: "bucket", bucket: "today" });
       notify("List deleted.");
     } catch (caught) {
       notify(caught instanceof ApiError ? caught.message : "Could not delete list.");
