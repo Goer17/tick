@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import express from "express";
 import { z } from "zod";
 import { addRepeat, isDateString, todayUtc } from "./dates.js";
-import { getState, mutateState, newId, randomPaletteColor } from "./store.js";
+import { getState, mutateState, newId } from "./store.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.TICK_PORT ?? 3456);
@@ -161,12 +161,10 @@ const dateSchema = z.string().refine(isDateString, "Use a valid YYYY-MM-DD date.
 const categoryCreateSchema = z.object({
   name: z.string().trim().min(1).max(80),
   parentId: z.string().min(1).nullable().optional(),
-  color: z.string().regex(/^#[0-9a-f]{6}$/i).optional(),
 });
 
 const categoryUpdateSchema = z.object({
   name: z.string().trim().min(1).max(80).optional(),
-  color: z.string().regex(/^#[0-9a-f]{6}$/i).optional(),
 });
 
 const todoCreateSchema = z.object({
@@ -218,7 +216,7 @@ app.post("/api/categories", (request, response) => {
     id: newId(),
     name: body.name,
     parentId: body.parentId ?? null,
-    color: body.color ?? randomPaletteColor(),
+    color: "#8b8f91",
     order: maxOrder + 1,
     system: false,
   };
@@ -234,7 +232,6 @@ app.patch("/api/categories/:id", (request, response) => {
     const category = categoryById(draft, request.params.id);
     if (!category) fail(404, "List not found.");
     if (body.name !== undefined) category.name = body.name;
-    if (body.color !== undefined) category.color = body.color;
     return category;
   });
   response.json({ category: updated, ...getStateResponse() });

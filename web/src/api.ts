@@ -99,10 +99,10 @@ export const api = {
 
   state: () => request<StatePayload>("/api/state"),
 
-  createCategory: (input: { name: string; parentId?: string | null; color?: string }) =>
+  createCategory: (input: { name: string; parentId?: string | null }) =>
     request<StateResponse>("/api/categories", { method: "POST", body: input }),
 
-  updateCategory: (id: string, input: { name?: string; color?: string }) =>
+  updateCategory: (id: string, input: { name?: string }) =>
     request<StateResponse>(`/api/categories/${id}`, { method: "PATCH", body: input }),
 
   deleteCategory: (id: string) =>

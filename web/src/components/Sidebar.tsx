@@ -31,7 +31,6 @@ interface SidebarProps {
   onSelectView: (view: View) => void;
   onNewList: (parentId: string | null) => void;
   onDeleteCategory: (id: string) => void;
-  onEditColor: (id: string) => void;
   onMoveTodo: (id: string, target: View) => void;
   onCloseMobile: () => void;
 }
@@ -55,7 +54,6 @@ export function Sidebar({
   onSelectView,
   onNewList,
   onDeleteCategory,
-  onEditColor,
   onMoveTodo,
   onCloseMobile,
 }: SidebarProps): React.JSX.Element {
@@ -132,18 +130,6 @@ export function Sidebar({
             aria-label={isCollapsed ? "Expand list" : "Collapse list"}
           >
             <ChevronRight size={13} className={isCollapsed ? "" : "rotated"} />
-          </button>
-          <button
-            className="category-color"
-            style={{ color: category.color }}
-            onClick={(event) => {
-              event.stopPropagation();
-              onEditColor(category.id);
-            }}
-            title="Change list color"
-            aria-label="Change list color"
-          >
-            <span className="category-dot" style={{ background: category.color }} />
           </button>
           <Folder size={14} className="category-folder" />
           <span className="category-name">{category.name}</span>

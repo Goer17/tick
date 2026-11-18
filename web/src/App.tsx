@@ -9,7 +9,6 @@ import { TodoDrawer } from "./components/TodoDrawer";
 import { Settings } from "./components/Settings";
 import { NewListModal } from "./components/NewListModal";
 import { ConfirmDialog } from "./components/ConfirmDialog";
-import { ColorPickerModal } from "./components/ColorPickerModal";
 import {
   BUCKET_META,
   addDays,
@@ -101,7 +100,6 @@ function App(): React.JSX.Element {
   const [adding, setAdding] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
-  const [colorCategoryId, setColorCategoryId] = useState<string | null>(null);
   const toastTimer = useRef<number | undefined>(undefined);
 
   function notify(message: string): void {
@@ -358,7 +356,7 @@ function App(): React.JSX.Element {
     notify("Subtask added.");
   }
 
-  async function createCategory(input: { name: string; parentId: string | null; color: string }): Promise<void> {
+  async function createCategory(input: { name: string; parentId: string | null }): Promise<void> {
     const response = await api.createCategory(input);
     applyResponse(response);
     playSound("add");
@@ -478,7 +476,6 @@ function App(): React.JSX.Element {
         onSelectView={selectView}
         onNewList={(parentId) => setNewListParent(parentId)}
         onDeleteCategory={requestDeleteCategory}
-        onEditColor={setColorCategoryId}
         onMoveTodo={(id, target) => void moveTodo(id, target)}
         onCloseMobile={() => setMobileMenu(false)}
       />
@@ -613,19 +610,6 @@ function App(): React.JSX.Element {
           soundVolume={soundSettings.volume}
           onSoundEnabled={changeSoundEnabled}
           onSoundVolume={changeSoundVolume}
-        />
-      ) : null}
-
-      {colorCategoryId && categoryMap.has(colorCategoryId) ? (
-        <ColorPickerModal
-          category={categoryMap.get(colorCategoryId)!}
-          onClose={() => setColorCategoryId(null)}
-          onSave={async (color) => {
-            const response = await api.updateCategory(colorCategoryId, { color });
-            applyResponse(response);
-            playSound("save");
-            notify("List color updated.");
-          }}
         />
       ) : null}
 

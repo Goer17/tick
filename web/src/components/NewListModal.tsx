@@ -1,20 +1,18 @@
 import { useState } from "react";
-import { FolderPlus, Shuffle, X } from "lucide-react";
+import { FolderPlus, X } from "lucide-react";
 import type { Category } from "../types";
 import { categoryPath } from "../lib/dates";
-import { PALETTE, randomColor } from "../lib/colors";
 
 interface NewListModalProps {
   parentId: string | null;
   categories: Category[];
   onClose: () => void;
-  onCreate: (input: { name: string; parentId: string | null; color: string }) => Promise<void>;
+  onCreate: (input: { name: string; parentId: string | null }) => Promise<void>;
 }
 
 export function NewListModal({ parentId, categories, onClose, onCreate }: NewListModalProps): React.JSX.Element {
   const [name, setName] = useState("");
   const [parent, setParent] = useState(parentId ?? "");
-  const [color, setColor] = useState(() => randomColor());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -24,7 +22,7 @@ export function NewListModal({ parentId, categories, onClose, onCreate }: NewLis
     setBusy(true);
     setError("");
     try {
-      await onCreate({ name: name.trim(), parentId: parent || null, color });
+      await onCreate({ name: name.trim(), parentId: parent || null });
       onClose();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not create list.");
@@ -61,26 +59,6 @@ export function NewListModal({ parentId, categories, onClose, onCreate }: NewLis
               ))}
             </select>
           </label>
-          <div className="field">
-            <span className="field-label">Color</span>
-            <div className="color-picker-row">
-              <div className="color-picker">
-                {PALETTE.map((swatch) => (
-                  <button
-                    key={swatch}
-                    type="button"
-                    className={`color-swatch ${color === swatch ? "selected" : ""}`}
-                    style={{ background: swatch }}
-                    onClick={() => setColor(swatch)}
-                    aria-label={`Use color ${swatch}`}
-                  />
-                ))}
-              </div>
-              <button type="button" className="random-color" onClick={() => setColor(randomColor())} title="Pick a random color">
-                <Shuffle size={13} /> Random
-              </button>
-            </div>
-          </div>
           {error ? <p className="form-error">{error}</p> : null}
         </div>
         <footer className="modal-footer">

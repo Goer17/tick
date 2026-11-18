@@ -9,7 +9,6 @@ export interface Category {
   id: string;
   name: string;
   parentId: string | null;
-  color: string;
   order: number;
   system?: boolean;
 }

@@ -9,26 +9,7 @@ export const DATA_DIR = path.resolve(
 );
 const STATE_FILE = path.join(DATA_DIR, "state.json");
 
-const COLORS = [
-  "#d97757",
-  "#e08a4f",
-  "#d6a84a",
-  "#b5b04a",
-  "#88a85a",
-  "#5fa47a",
-  "#4fa39a",
-  "#56a1b5",
-  "#5b8fc4",
-  "#6f7fc4",
-  "#8a7ac6",
-  "#a875bf",
-  "#bf76a8",
-  "#c9788d",
-  "#bd7a70",
-  "#a6856b",
-  "#8b8f91",
-  "#7d9a8a",
-];
+const NEUTRAL_COLOR = "#8b8f91";
 
 function freshState() {
   return {
@@ -38,7 +19,7 @@ function freshState() {
         id: "inbox",
         name: "Default",
         parentId: null,
-        color: COLORS[0],
+        color: NEUTRAL_COLOR,
         order: 0,
         system: true,
       },
@@ -54,7 +35,7 @@ function ensureShape(data) {
   data.todos = Array.isArray(data.todos) ? data.todos : [];
   for (const category of data.categories) {
     category.order ??= 0;
-    category.color ??= COLORS[0];
+    category.color ??= NEUTRAL_COLOR;
     category.parentId ??= null;
   }
   for (const todo of data.todos) {
@@ -73,7 +54,7 @@ function ensureShape(data) {
       id: "inbox",
       name: "Default",
       parentId: null,
-      color: COLORS[0],
+      color: NEUTRAL_COLOR,
       order: 0,
       system: true,
     });
@@ -121,8 +102,5 @@ export function newId() {
   return crypto.randomUUID();
 }
 
-export function randomPaletteColor() {
-  return COLORS[crypto.randomInt(COLORS.length)];
-}
 
-export { COLORS };
+
