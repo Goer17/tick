@@ -30,10 +30,6 @@ interface ConfirmState {
   action: () => Promise<void>;
 }
 
-function flattenNodes(nodes: TodoNode[]): Todo[] {
-  return nodes.flatMap((node) => [node.todo, ...flattenNodes(node.children)]);
-}
-
 function subtreeIds(categories: Category[], rootId: string): Set<string> {
   const ids = new Set([rootId]);
   let changed = true;
@@ -47,6 +43,12 @@ function subtreeIds(categories: Category[], rootId: string): Set<string> {
     }
   }
   return ids;
+}
+
+function byCompletedAt(left: Todo, right: Todo): number {
+  const leftTime = left.completedAt ?? left.createdAt;
+  const rightTime = right.completedAt ?? right.createdAt;
+  return rightTime.localeCompare(leftTime);
 }
 
 function byDueDate(left: Todo, right: Todo): number {
@@ -96,6 +98,7 @@ function App(): React.JSX.Element {
   const [themeMode, setThemeModeState] = useState<ThemeMode>(() => getThemeMode());
   const [soundSettings, setSoundSettings] = useState(() => getSoundSettings());
   const [today, setToday] = useState(localDateString());
+  const [showCompleted, setShowCompleted] = useState(false);
   const [draft, setDraft] = useState("");
   const [adding, setAdding] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -218,26 +221,47 @@ function App(): React.JSX.Element {
     return categories.find((category) => category.system)?.id ?? categories[0]?.id ?? "";
   }, [view, categories]);
 
-  const categoryTodos = view.kind === "category" ? todos.filter((todo) => todo.categoryId === view.id) : [];
-  const categoryNodes = view.kind === "category" ? rootNodes(todos, categoryTodos, search) : [];
-  const bucketTodos = view.kind === "bucket"
-    ? (view.bucket === "planned"
-        ? todos.filter((todo) => todo.parentId === null && !todo.completed && matchesSearch(todo, search))
-        : view.bucket === "done"
-          ? todos.filter((todo) => todo.parentId === null && todo.completed && matchesSearch(todo, search))
-          : todos.filter(
-              (todo) =>
-                todo.parentId === null &&
-                !todo.completed &&
-                bucketFor(todo, today) === view.bucket &&
-                matchesSearch(todo, search),
-            )
-      ).sort(byDueDate)
+  const categoryRoots = view.kind === "category"
+    ? todos.filter((todo) => todo.categoryId === view.id && todo.parentId === null && matchesSearch(todo, search))
     : [];
-  const visibleNodes: TodoNode[] = view.kind === "category"
-    ? categoryNodes
-    : bucketTodos.map((todo) => nodeFor(todo, todos));
-  const visibleCount = view.kind === "category" ? flattenNodes(categoryNodes).length : bucketTodos.length;
+  const plannedRoots = view.kind === "bucket" && view.bucket === "planned"
+    ? todos.filter((todo) => todo.parentId === null && matchesSearch(todo, search))
+    : [];
+  const doneRoots = view.kind === "bucket" && view.bucket === "done"
+    ? todos.filter((todo) => todo.parentId === null && todo.completed && matchesSearch(todo, search))
+    : [];
+  const bucketRoots = view.kind === "bucket" && view.bucket !== "planned" && view.bucket !== "done"
+    ? todos.filter(
+        (todo) =>
+          todo.parentId === null &&
+          !todo.completed &&
+          bucketFor(todo, today) === view.bucket &&
+          matchesSearch(todo, search),
+      )
+    : [];
+
+  let activeTodos: Todo[] = [];
+  let completedTodos: Todo[] = [];
+  let completedIsSection = false;
+
+  if (view.kind === "category") {
+    activeTodos = categoryRoots.filter((todo) => !todo.completed);
+    completedTodos = categoryRoots.filter((todo) => todo.completed).sort(byCompletedAt);
+    completedIsSection = true;
+  } else if (view.bucket === "planned") {
+    activeTodos = plannedRoots.filter((todo) => !todo.completed).sort(byDueDate);
+    completedTodos = plannedRoots.filter((todo) => todo.completed).sort(byCompletedAt);
+    completedIsSection = true;
+  } else if (view.bucket === "done") {
+    completedTodos = doneRoots.sort(byCompletedAt);
+  } else {
+    activeTodos = bucketRoots.sort(byDueDate);
+  }
+
+  const activeNodes = activeTodos.map((todo) => nodeFor(todo, todos));
+  const completedNodes = completedTodos.map((todo) => nodeFor(todo, todos));
+  const isDoneView = view.kind === "bucket" && view.bucket === "done";
+  const visibleCount = activeNodes.length + (showCompleted || isDoneView ? completedNodes.length : 0);
 
   const longTermGoals = useMemo(
     () =>
@@ -553,26 +577,70 @@ function App(): React.JSX.Element {
             </form>
           )}
 
-          <TodoList
-            nodes={visibleNodes}
-            categories={categories}
-            today={today}
-            showCategory={showCategory}
-            emptyTitle={
-              view.kind === "category"
-                ? "This list is clear."
-                : view.bucket === "done"
-                  ? "Nothing completed yet."
-                  : "Nothing here yet."
-            }
-            emptyHint={
-              view.kind === "category"
-                ? "Add a task above, or open a task to break it into steps."
-                : "Add a task above, or move something into this window."
-            }
-            onToggle={(todo) => void toggleTodo(todo)}
-            onOpen={openTodo}
-          />
+          {isDoneView ? null : completedIsSection && activeNodes.length === 0 && completedNodes.length > 0 ? (
+            <div className="open-empty">No open tasks.</div>
+          ) : (
+            <TodoList
+              nodes={activeNodes}
+              categories={categories}
+              today={today}
+              showCategory={showCategory}
+              emptyTitle={
+                view.kind === "category"
+                  ? "This list is clear."
+                  : view.bucket === "done"
+                    ? "Nothing completed yet."
+                    : "Nothing here yet."
+              }
+              emptyHint={
+                view.kind === "category"
+                  ? "Add a task above, or open a task to break it into steps."
+                  : "Add a task above, or move something into this window."
+              }
+              onToggle={(todo) => void toggleTodo(todo)}
+              onOpen={openTodo}
+            />
+          )}
+
+          {completedIsSection && completedNodes.length > 0 ? (
+            <section className="completed-section">
+              <button
+                className={`completed-toggle ${showCompleted ? "open" : ""}`}
+                onClick={() => {
+                  playSound("toggle");
+                  setShowCompleted((current) => !current);
+                }}
+              >
+                <ChevronRight size={14} /> Completed
+                <span>{completedNodes.length}</span>
+              </button>
+              {showCompleted ? (
+                <TodoList
+                  nodes={completedNodes}
+                  categories={categories}
+                  today={today}
+                  showCategory={showCategory}
+                  emptyTitle="Nothing completed yet."
+                  emptyHint=""
+                  onToggle={(todo) => void toggleTodo(todo)}
+                  onOpen={openTodo}
+                />
+              ) : null}
+            </section>
+          ) : null}
+
+          {isDoneView ? (
+            <TodoList
+              nodes={completedNodes}
+              categories={categories}
+              today={today}
+              showCategory={showCategory}
+              emptyTitle="Nothing completed yet."
+              emptyHint="Tasks you finish will collect here."
+              onToggle={(todo) => void toggleTodo(todo)}
+              onOpen={openTodo}
+            />
+          ) : null}
         </section>
       </main>
 
