@@ -471,21 +471,22 @@ input::placeholder, textarea::placeholder { color: var(--faint); }
 .legend-cell { width: 10px; height: 10px; display: inline-flex; align-items: center; justify-content: center; background: #fff; border: 1px solid var(--line); border-radius: 2px; }
 .legend-cell > i { display: block; background: #2ea44f; border-radius: 2px; }
 .heatmap-scroll { overflow-x: auto; padding: 8px 0 3px; scrollbar-width: thin; }
-.heatmap-months { display: flex; gap: 3px; margin-left: 36px; height: 12px; }
-.heatmap-month { width: 10px; color: var(--muted); font-size: 7px; white-space: nowrap; overflow: visible; }
+.heatmap-months { display: flex; gap: 6px; margin-left: 36px; height: 13px; }
+.heatmap-month { flex: 1; color: var(--muted); font-size: 8px; white-space: nowrap; overflow: visible; }
 .heatmap-body { display: flex; gap: 5px; align-items: flex-start; }
-.heatmap-weekdays { width: 31px; display: flex; flex-direction: column; gap: 3px; color: var(--faint); font-size: 7px; line-height: 10px; }
-.heatmap-weekdays span { height: 10px; }
-.heatmap-grid { display: flex; gap: 3px; }
-.heatmap-week { display: grid; grid-template-rows: repeat(7, 10px); gap: 3px; }
+.heatmap-weekdays { width: 31px; display: flex; flex-direction: column; gap: 3px; color: var(--faint); font-size: 7px; line-height: 16px; }
+.heatmap-weekdays span { height: 16px; }
+.heatmap-grid { display: flex; gap: 6px; flex: 1; }
+.heatmap-month-group { display: flex; gap: 3px; min-width: 0; }
+.heatmap-week { display: grid; grid-template-rows: repeat(7, 16px); gap: 3px; flex: 1; }
 .heatmap-cell {
   position: relative;
-  width: 10px;
-  height: 10px;
+  width: 16px;
+  height: 16px;
   display: block;
   background: #fff;
   border: 1px solid var(--line);
-  border-radius: 2px;
+  border-radius: 3px;
 }
 .heatmap-cell.future { visibility: hidden; }
 .heatmap-fill {
@@ -929,7 +930,13 @@ input::placeholder, textarea::placeholder { color: var(--faint); }
   .completion-panel { width: auto; margin: 8px 14px 0; padding: 10px 12px 9px; }
   .completion-legend { display: none; }
   .heatmap-scroll { padding-bottom: 4px; }
-  .heatmap-months { margin-left: 31px; }
+  .heatmap-months { margin-left: 31px; gap: 5px; }
+  .heatmap-grid { gap: 5px; }
+  .heatmap-month-group { gap: 3px; }
+  .heatmap-week { grid-template-rows: repeat(7, 12px); gap: 3px; }
+  .heatmap-cell { width: 12px; height: 12px; }
+  .heatmap-weekdays { line-height: 12px; }
+  .heatmap-weekdays span { height: 12px; }
   .goals-title { font-size: 8px; }
   .goal-card { min-width: 190px; max-width: 252px; }
   .goal-name, .goal-meta { max-width: 210px; }

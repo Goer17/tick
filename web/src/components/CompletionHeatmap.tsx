@@ -50,7 +50,7 @@ export function CompletionHeatmap({ todos, today }: { todos: Todo[]; today: stri
           done,
           future: date > today,
           rate,
-          fill: rate === null ? 0 : Math.max(2, Math.round(rate * 8)),
+          fill: rate === null ? 0 : Math.max(3, Math.round(rate * 12)),
         });
       }
       const label = monthLabel(cells[0].date);
@@ -59,6 +59,15 @@ export function CompletionHeatmap({ todos, today }: { todos: Todo[]; today: stri
     }
     return result;
   }, [todos, today]);
+
+  const months = useMemo(() => {
+    const groups: { label: string; weeks: typeof weeks }[] = [];
+    for (const week of weeks) {
+      if (week.label) groups.push({ label: week.label, weeks: [] });
+      groups.at(-1)?.weeks.push(week);
+    }
+    return groups;
+  }, [weeks]);
 
   const totalDue = todos.filter((todo) => todo.parentId === null && todo.dueDate).length;
 
@@ -79,8 +88,8 @@ export function CompletionHeatmap({ todos, today }: { todos: Todo[]; today: stri
       </div>
       <div className="heatmap-scroll">
         <div className="heatmap-months" aria-hidden="true">
-          {weeks.map((week, index) => (
-            <span key={index} className="heatmap-month">{week.label}</span>
+          {months.map((month) => (
+            <span key={month.label} className="heatmap-month" style={{ flex: month.weeks.length }}>{month.label}</span>
           ))}
         </div>
         <div className="heatmap-body">
@@ -88,9 +97,11 @@ export function CompletionHeatmap({ todos, today }: { todos: Todo[]; today: stri
             <span>Mon</span><span /><span>Wed</span><span /><span>Fri</span><span /><span>Sun</span>
           </div>
           <div className="heatmap-grid">
-            {weeks.map((week, weekIndex) => (
-              <div key={weekIndex} className="heatmap-week">
-                {week.cells.map((cell) => (
+            {months.map((month) => (
+              <div key={month.label} className="heatmap-month-group" style={{ flex: month.weeks.length }}>
+                {month.weeks.map((week, weekIndex) => (
+                  <div key={weekIndex} className="heatmap-week">
+                    {week.cells.map((cell) => (
                   <span
                     key={cell.date}
                     className={`heatmap-cell ${cell.future ? "future" : ""}`}
@@ -103,11 +114,13 @@ export function CompletionHeatmap({ todos, today }: { todos: Todo[]; today: stri
                               : `${cell.done}/${cell.total} completed (${Math.round((cell.rate ?? 0) * 100)}%)`
                           }`
                     }
-                  >
-                    {!cell.future && cell.fill > 0 ? (
-                      <i className="heatmap-fill" style={{ width: cell.fill, height: cell.fill }} />
-                    ) : null}
-                  </span>
+                      >
+                        {!cell.future && cell.fill > 0 ? (
+                          <i className="heatmap-fill" style={{ width: cell.fill, height: cell.fill }} />
+                        ) : null}
+                      </span>
+                    ))}
+                  </div>
                 ))}
               </div>
             ))}
