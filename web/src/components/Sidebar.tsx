@@ -9,6 +9,7 @@ import {
   FolderPlus,
   Menu,
   Moon,
+  Pencil,
   Plus,
   Search,
   Sun,
@@ -31,6 +32,7 @@ interface SidebarProps {
   onSelectView: (view: View) => void;
   onNewList: (parentId: string | null) => void;
   onDeleteCategory: (id: string) => void;
+  onRenameCategory: (id: string) => void;
   onMoveTodo: (id: string, target: View) => void;
   onCloseMobile: () => void;
 }
@@ -54,6 +56,7 @@ export function Sidebar({
   onSelectView,
   onNewList,
   onDeleteCategory,
+  onRenameCategory,
   onMoveTodo,
   onCloseMobile,
 }: SidebarProps): React.JSX.Element {
@@ -135,6 +138,16 @@ export function Sidebar({
           <span className="category-name">{category.name}</span>
           <span className="category-count">{categoryCounts.get(category.id) ?? 0}</span>
           <span className="category-actions">
+            <button
+              className="mini-icon rename"
+              title="Rename list"
+              onClick={(event) => {
+                event.stopPropagation();
+                onRenameCategory(category.id);
+              }}
+            >
+              <Pencil size={13} />
+            </button>
             <button
               className="mini-icon"
               title="Add sublist"

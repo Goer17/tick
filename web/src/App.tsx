@@ -9,6 +9,8 @@ import { TodoDrawer } from "./components/TodoDrawer";
 import { Settings } from "./components/Settings";
 import { NewListModal } from "./components/NewListModal";
 import { ConfirmDialog } from "./components/ConfirmDialog";
+import { RenameListModal } from "./components/RenameListModal";
+import { CompletionHeatmap } from "./components/CompletionHeatmap";
 import {
   BUCKET_META,
   addDays,
@@ -95,6 +97,7 @@ function App(): React.JSX.Element {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [drawerId, setDrawerId] = useState<string | null>(null);
   const [newListParent, setNewListParent] = useState<string | null | undefined>(undefined);
+  const [renameCategoryId, setRenameCategoryId] = useState<string | null>(null);
   const [themeMode, setThemeModeState] = useState<ThemeMode>(() => getThemeMode());
   const [soundSettings, setSoundSettings] = useState(() => getSoundSettings());
   const [today, setToday] = useState(localDateString());
@@ -500,6 +503,7 @@ function App(): React.JSX.Element {
         onSelectView={selectView}
         onNewList={(parentId) => setNewListParent(parentId)}
         onDeleteCategory={requestDeleteCategory}
+        onRenameCategory={setRenameCategoryId}
         onMoveTodo={(id, target) => void moveTodo(id, target)}
         onCloseMobile={() => setMobileMenu(false)}
       />
@@ -537,6 +541,7 @@ function App(): React.JSX.Element {
         </div>
 
         <LongTermGoals goals={longTermGoals} categories={categories} today={today} onOpen={openTodo} />
+        <CompletionHeatmap todos={todos} today={today} />
 
         <section className="content">
           <div className="content-heading">
@@ -678,6 +683,19 @@ function App(): React.JSX.Element {
           soundVolume={soundSettings.volume}
           onSoundEnabled={changeSoundEnabled}
           onSoundVolume={changeSoundVolume}
+        />
+      ) : null}
+
+      {renameCategoryId && categoryMap.has(renameCategoryId) ? (
+        <RenameListModal
+          category={categoryMap.get(renameCategoryId)!}
+          onClose={() => setRenameCategoryId(null)}
+          onSave={async (name) => {
+            const response = await api.updateCategory(renameCategoryId, { name });
+            applyResponse(response);
+            playSound("save");
+            notify("List renamed.");
+          }}
         />
       ) : null}
 

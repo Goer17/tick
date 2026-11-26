@@ -60,7 +60,7 @@ function ensureShape(data) {
     });
   }
   const defaultCategory = data.categories.find((category) => category.id === "inbox");
-  if (defaultCategory?.system) defaultCategory.name = "Default";
+  if (defaultCategory?.system && defaultCategory.name === "Inbox") defaultCategory.name = "Default";
   return data;
 }
 
