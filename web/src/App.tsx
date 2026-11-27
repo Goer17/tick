@@ -11,6 +11,7 @@ import { NewListModal } from "./components/NewListModal";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { RenameListModal } from "./components/RenameListModal";
 import { CompletionHeatmap } from "./components/CompletionHeatmap";
+import { Confetti } from "./components/Confetti";
 import {
   BUCKET_META,
   addDays,
@@ -102,6 +103,7 @@ function App(): React.JSX.Element {
   const [soundSettings, setSoundSettings] = useState(() => getSoundSettings());
   const [today, setToday] = useState(localDateString());
   const [showCompleted, setShowCompleted] = useState(false);
+  const [confettiFire, setConfettiFire] = useState(0);
   const [draft, setDraft] = useState("");
   const [adding, setAdding] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -134,7 +136,7 @@ function App(): React.JSX.Element {
     }
     setAuthState("loading");
     try {
-      const next = await api.state();
+      const next = await api.state(localDateString());
       setState(next);
       setAuthState("in");
     } catch {
@@ -337,11 +339,29 @@ function App(): React.JSX.Element {
     }
   }
 
+  function celebrateToday(nextTodos: Todo[]): void {
+    const due = nextTodos.filter(
+      (todo) => todo.parentId === null && todo.dueDate !== null && todo.dueDate <= today,
+    );
+    if (due.length === 0 || !due.every((todo) => todo.completed)) return;
+    const key = `tick-celebrated-${today}`;
+    try {
+      if (localStorage.getItem(key)) return;
+      localStorage.setItem(key, "1");
+    } catch {
+      return;
+    }
+    setConfettiFire((value) => value + 1);
+    playSound("important");
+    notify("All tasks for today are done 🎉");
+  }
+
   async function toggleTodo(todo: Todo): Promise<void> {
     try {
       const response = await api.updateTodo(todo.id, { completed: !todo.completed });
       applyResponse(response);
       playSound(todo.completed ? "uncomplete" : "complete");
+      celebrateToday(response.todos);
     } catch (caught) {
       notify(caught instanceof ApiError ? caught.message : "Could not update task.");
     }
@@ -452,6 +472,7 @@ function App(): React.JSX.Element {
       const response = await api.updateTodo(id, patch);
       applyResponse(response);
       playSound(target.bucket === "done" ? "complete" : "save");
+      celebrateToday(response.todos);
       notify(`Deadline moved to ${BUCKET_META[target.bucket].label}.`);
     } catch (caught) {
       notify(caught instanceof ApiError ? caught.message : "Could not move task.");
@@ -712,6 +733,7 @@ function App(): React.JSX.Element {
         }}
       />
 
+      <Confetti fire={confettiFire} />
       {toast ? <div className="toast">{toast}</div> : null}
     </div>
   );

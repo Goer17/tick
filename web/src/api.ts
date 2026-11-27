@@ -97,7 +97,8 @@ export const api = {
   login: (token: string) =>
     request<{ ok: boolean }>("/api/login", { method: "POST", body: { token }, auth: false }),
 
-  state: () => request<StatePayload>("/api/state"),
+  state: (today?: string) =>
+    request<StatePayload>(`/api/state${today ? `?today=${encodeURIComponent(today)}` : ""}`),
 
   createCategory: (input: { name: string; parentId?: string | null }) =>
     request<StateResponse>("/api/categories", { method: "POST", body: input }),

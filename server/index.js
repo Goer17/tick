@@ -201,9 +201,32 @@ app.post("/api/login", (request, response) => {
 
 app.use("/api", requireAuth);
 
-app.get("/api/state", (_request, response) => {
+function rollForwardRepeating(state, today) {
+  let changed = false;
+  for (const todo of state.todos) {
+    if (todo.completed || !todo.repeat || !todo.dueDate) continue;
+    if (todo.dueDate < today) {
+      todo.dueDate = today;
+      changed = true;
+    }
+  }
+  return changed;
+}
+
+app.get("/api/state", (request, response) => {
+  const requestedToday = typeof request.query.today === "string" ? request.query.today : "";
+  const today = isDateString(requestedToday) ? requestedToday : todayUtc();
   const state = getState();
-  response.json({ categories: state.categories, todos: state.todos });
+  const needsRoll = state.todos.some(
+    (todo) => !todo.completed && todo.repeat && todo.dueDate && todo.dueDate < today,
+  );
+  if (needsRoll) {
+    mutateState((draft) => {
+      rollForwardRepeating(draft, today);
+    });
+  }
+  const next = getState();
+  response.json({ categories: next.categories, todos: next.todos });
 });
 
 app.post("/api/categories", (request, response) => {
